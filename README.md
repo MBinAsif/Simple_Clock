@@ -1,5 +1,6 @@
-```markdown
 # Simple Clock Web Application
+
+```markdown
 
 This is a Simple Clock web application built with web2py, providing both digital and analog clock displays with dynamic background changes based on the time of day. Users can select their preferred time zone from a list of options.
 
