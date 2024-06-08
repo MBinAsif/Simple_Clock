@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Simple Clock</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            transition: background-color 0.5s;
+        }
+        .clock-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: lightblue;
+            color: #fff;
+            font-size: 2em;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .digital-clock {
+            background: #222;
+            padding: 10px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        #analogClock {
+            width: 250px;
+            height: 250px;
+            border: 10px solid #333;
+            border-radius: 50%;
+            position: relative;
+            background: #fff;
+        }
+        .hand {
+            width: 25%;
+            height: 2px;
+            background: #333;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: 0% 50%;
+            transform: rotate(90deg);
+            transition: transform 0.5s cubic-bezier(0.4, 2.3, 0.3, 1);
+        }
+        .hand.second {
+            height: 0.5px;
+            background: red;
+        }
+        .hand.hour {
+            height: 4px;
+            background: #333;
+        }
+        .hand.minute {
+            height: 3px;
+            background: #333;
+        }
+        .number {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            transform: translate(-50%, -50%);
+            font-size: 1.2em;
+            color: #333;
+        }
+        .number1  { top: 20%; left: 73%; }
+        .number2  { top: 35%; left: 85%; }
+        .number3  { top: 50%; left: 87%; }
+        .number4  { top: 65%; left: 85%; }
+        .number5  { top: 80%; left: 73%; }
+        .number6  { top: 87%; left: 50%; }
+        .number7  { top: 80%; left: 27%; }
+        .number8  { top: 65%; left: 15%; }
+        .number9  { top: 50%; left: 13%; }
+        .number10 { top: 35%; left: 15%; }
+        .number11 { top: 20%; left: 27%; }
+        .number12 { top: 13%; left: 47%; }
+    </style>
+    <script>
+        let selectedTimeZone = 'UTC';
+
+        function updateTime() {
+            fetch('{{=URL('default', 'get_time')}}')
+                .then(response => response.json())
+                .then(data => {
+                    const now = new Date(new Date(data.current_time).toLocaleString("en-US", { timeZone: selectedTimeZone }));
+                    document.getElementById('time').innerText = now.toLocaleTimeString();
+                    updateAnalogClock(now);
+                    updateBackgroundColor(now);
+                });
+        }
+
+        function updateAnalogClock(now) {
+            const seconds = now.getSeconds();
+            const minutes = now.getMinutes();
+            const hours = now.getHours();
+
+            const secondHand = document.querySelector('.hand.second');
+            const minuteHand = document.querySelector('.hand.minute');
+            const hourHand = document.querySelector('.hand.hour');
+
+            const secondDegrees = ((seconds / 60) * 360) + 90;
+            const minuteDegrees = ((minutes / 60) * 360) + ((seconds / 60) * 6) + 90;
+            const hourDegrees = ((hours / 12) * 360) + ((minutes / 60) * 30) + 90;
+
+            secondHand.style.transform = `rotate(${secondDegrees}deg)`;
+            minuteHand.style.transform = `rotate(${minuteDegrees}deg)`;
+            hourHand.style.transform = `rotate(${hourDegrees}deg)`;
+        }
+
+        function updateBackgroundColor(now) {
+            const hours = now.getHours();
+            let bgImage;
+
+            if (hours >= 6 && hours < 12) {
+                bgImage = 'url("/{{=request.application}}/static/images/morning.jpeg")'; // Morning (6 AM to 12 PM)
+            } else if (hours >= 12 && hours < 18) {
+                bgImage = 'url("/{{=request.application}}/static/images/noon.jpeg")'; // Noon (12 PM to 6 PM)
+            } else if (hours >= 18 && hours < 21) {
+                bgImage = 'url("/{{=request.application}}/static/images/evening.jpeg")'; // Evening (6 PM to 9 PM)
+            } else {
+                bgImage = 'url("/{{=request.application}}/static/images/night.jpeg")'; // Night (9 PM to 6 AM)
+            }
+
+            document.body.style.backgroundImage = bgImage;
+            document.body.style.backgroundSize = 'cover'; // Make the background image cover the entire screen
+            document.body.style.backgroundColor = 'transparent'; // Ensure background color is transparent
+        }
+
+
+        function changeTimeZone(event) {
+            selectedTimeZone = event.target.value;
+            updateTime();
+        }
+
+        setInterval(updateTime, 1000);
+        window.onload = updateTime;
+    </script>
+</head>
+<body>
+    <div class="clock-container">
+        <div class="time-zone">
+            <label for="time-zone-select">Time Zone:</label>
+            <select id="time-zone-select" onchange="changeTimeZone(event)">
+                <option value="Asia/Karachi">Pakistan (PKT)</option>
+                <option value="UTC">UTC</option>
+                <option value="America/New_York">New York (EST)</option>
+                <option value="Europe/London">London (GMT)</option>
+                <option value="Asia/Tokyo">Tokyo (JST)</option>
+                <option value="Australia/Sydney">Sydney (AEST)</option>
+            </select>
+        </div>
+        <div class="digital-clock" id="time">{{=current_time}}</div>
+        <div id="analogClock">
+            <div class="hand hour"></div>
+            <div class="hand minute"></div>
+            <div class="hand second"></div>
+            <div class="number number1">1</div>
+            <div class="number number2">2</div>
+            <div class="number number3">3</div>
+            <div class="number number4">4</div>
+            <div class="number number5">5</div>
+            <div class="number number6">6</div>
+            <div class="number number7">7</div>
+            <div class="number number8">8</div>
+            <div class="number number9">9</div>
+            <div class="number number10">10</div>
+            <div class="number number11">11</div>
+            <div class="number number12">12</div>
+        </div>
+    </div>
+</body>
+</html>
